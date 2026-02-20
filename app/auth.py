@@ -1,7 +1,7 @@
 from pwdlib import PasswordHash
 from app.models import *
 from app.database import get_session
-from sqlmodel import select
+from sqlmodel import select, Session
 from datetime import timedelta, datetime, timezone
 from app.database import SessionDep
 from fastapi.security import OAuth2PasswordBearer
