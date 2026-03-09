@@ -38,7 +38,25 @@ def create_todo(db:SessionDep, user:AuthDep, todo_data:TodoCreate):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="An error occurred while creating an item",
         )
-
+@todo_router.put('/todos/{id}/done', response_model=TodoResponse)
+def toggledone_todo(id:int, db:SessionDep, user:AuthDep, ):
+    todo = db.exec(select(Todo).where(Todo.id==id, Todo.user_id==user.id)).one_or_none()
+    if not todo:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized",
+        )
+    try:
+        todo.toggle()
+        db.add(todo)
+        db.commit()
+        return todo
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="An error occurred while updating an item",
+        )
+    
 @todo_router.put('/todo/{id}', response_model=TodoResponse)
 def update_todo(id:int, db:SessionDep, user:AuthDep, todo_data:TodoUpdate):
     todo = db.exec(select(Todo).where(Todo.id==id, Todo.user_id==user.id)).one_or_none()
@@ -49,7 +67,7 @@ def update_todo(id:int, db:SessionDep, user:AuthDep, todo_data:TodoUpdate):
         )
     if todo_data.text:
         todo.text = todo_data.text
-    if todo_data.done:
+    if todo_data.done is not None:
         todo.done = todo_data.done
     try:
         db.add(todo)
@@ -61,8 +79,8 @@ def update_todo(id:int, db:SessionDep, user:AuthDep, todo_data:TodoUpdate):
             detail="An error occurred while updating an item",
         )
 
-@todo_router.delete('/todo/{id}', status_code=status.HTTP_200_OK)
-def update_todo(id:int, db:SessionDep, user:AuthDep):
+@todo_router.delete('/todos/{id}', status_code=status.HTTP_200_OK)
+def delete_todo(id:int, db:SessionDep, user:AuthDep):
 
     todo = db.exec(select(Todo).where(Todo.id==id, Todo.user_id==user.id)).one_or_none()
     if not todo:
